@@ -1,16 +1,17 @@
 part of 'weather_cubit.dart';
 
-enum WeatherStateStatus { initial, fetchingWeather, hasError, weatherLoaded }
+enum WeatherStateStatus { initial, loading, error, loaded }
 
 class WeatherState extends Equatable {
-  const WeatherState({required this.status, this.location, this.temp});
+  const WeatherState({
+    this.status = WeatherStateStatus.initial,
+    this.location = '',
+    this.temp = '',
+  });
 
   final WeatherStateStatus status;
-  final String? location;
-  final String? temp;
-
-  @override
-  List<Object?> get props => [status, location, temp];
+  final String location;
+  final String temp;
 
   WeatherState copyWith({
     WeatherStateStatus? status,
@@ -23,4 +24,7 @@ class WeatherState extends Equatable {
       temp: temp ?? this.temp,
     );
   }
+
+  @override
+  List<Object?> get props => [status, location, temp];
 }

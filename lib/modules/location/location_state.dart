@@ -1,31 +1,30 @@
 part of 'location_cubit.dart';
 
-// enum LocationStateStatus { granted, permanentlyDenied, initial }
+enum LocationStateStatus { loading, loaded, initial }
 
 class LocationState extends Equatable {
-  const LocationState(
-      {required this.status,
-      this.isLocationEnabled = false,
-      this.isLocationInUseEnabled = false});
+  const LocationState({
+    this.permissionStatus = LocationPermission.unableToDetermine,
+    this.isLocationEnabled,
+    this.status = LocationStateStatus.initial,
+  });
 
-  final PermissionStatus status;
-  final bool isLocationEnabled;
-  final bool isLocationInUseEnabled;
+  final LocationPermission permissionStatus;
+  final bool? isLocationEnabled;
+  final LocationStateStatus status;
 
   @override
-  List<Object?> get props =>
-      [status, isLocationEnabled, isLocationInUseEnabled];
+  List<Object?> get props => [permissionStatus, isLocationEnabled, status];
 
   LocationState copyWith({
-    PermissionStatus? status,
+    LocationPermission? permissionStatus,
     bool? isLocationEnabled,
-    bool? isLocationInUseEnabled,
+    LocationStateStatus? status,
   }) {
     return LocationState(
-      status: status ?? this.status,
+      permissionStatus: permissionStatus ?? this.permissionStatus,
       isLocationEnabled: isLocationEnabled ?? this.isLocationEnabled,
-      isLocationInUseEnabled:
-          isLocationInUseEnabled ?? this.isLocationInUseEnabled,
+      status: status ?? this.status,
     );
   }
 }
