@@ -40,8 +40,8 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     final name = json['name'] as String? ?? '';
-    final region = json['region'] as String ?? '';
-    final country = json['country'] as String ?? '';
+    final region = json['region'] as String;
+    final country = json['country'] as String;
     final latitude = json['lat'] as num? ?? 0;
     final longitude = json['lon'] as num? ?? 0;
     final tzId = json['tz_id'] as String? ?? '';

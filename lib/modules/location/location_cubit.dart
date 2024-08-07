@@ -22,7 +22,6 @@ class LocationCubit extends Cubit<LocationState> {
       return Future.error('Location services are disabled.');
     } else {
       emit(state.copyWith(isLocationEnabled: true));
-      print('islocation enabled ....?: ${state.isLocationEnabled}');
     }
 
     permission = await Geolocator.checkPermission();
@@ -36,9 +35,6 @@ class LocationCubit extends Cubit<LocationState> {
       emit(state.copyWith(
           permissionStatus: permission, status: LocationStateStatus.loaded));
     } else if (permission == LocationPermission.denied) {
-      // permission = await Geolocator.requestPermission();
-      // log('permission 2: $permission');
-
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         log('permission 3: $permission');

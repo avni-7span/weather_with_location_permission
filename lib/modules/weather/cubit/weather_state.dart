@@ -1,6 +1,6 @@
 part of 'weather_cubit.dart';
 
-enum WeatherStateStatus { initial, loading, error, loaded }
+enum WeatherStateStatus { initial, loading, error, loaded, nullCity }
 
 class WeatherState extends Equatable {
   const WeatherState({

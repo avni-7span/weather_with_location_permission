@@ -14,9 +14,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  TextEditingController locationController = TextEditingController();
-  bool isChanging = false;
-  String? city;
+  final TextEditingController _locationController = TextEditingController();
+  String? _textFieldValue;
 
   Future<String?> getLocation() async {
     try {
@@ -24,9 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
       List<Placemark> placeMarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
       return placeMarks[0].locality;
-    } catch (e) {
-      print('placemark error.....${e.toString()}');
-    }
+    } catch (e) {}
     return null;
   }
 
@@ -34,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return BlocListener<LocationCubit, LocationState>(
       listener: (context, state) async {
-        print('mari permission : ${state.permissionStatus}');
         if (!state.isLocationEnabled!) {
           showDialog(
             context: context,
@@ -71,8 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (state.isLocationEnabled! &&
             (state.permissionStatus == LocationPermission.whileInUse ||
                 state.permissionStatus == LocationPermission.always)) {
-          city = await getLocation();
-          context.read<WeatherCubit>().getWeatherData(city ?? 'Delhi');
+          final city = await getLocation();
+          context.read<WeatherCubit>().getWeatherData(city ?? '');
+          _locationController.text = city ?? 'Could not fetch location';
         } else if (state.permissionStatus == LocationPermission.denied) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -80,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (state.permissionStatus == LocationPermission.deniedForever) {
-          print('permanentlyDenied ; must show dialogue');
           showDialog(
             context: context,
             builder: (_) {
@@ -123,6 +119,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 content: Text('Something went wrong'),
               ),
             );
+          } else if (state.status == WeatherStateStatus.nullCity) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please enter location for weather data'),
+              ),
+            );
           }
         },
         child: Scaffold(
@@ -137,42 +139,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       return TextFormField(
                         onChanged: (_) {
                           setState(() {
-                            isChanging = true;
+                            _textFieldValue = _locationController.text;
                           });
                         },
-                        controller: locationController,
+                        controller: _locationController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           hintText: 'Enter Location',
                           suffixIcon: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              isChanging
-                                  ? IconButton(
-                                      onPressed: () {
-                                        locationController.clear();
-                                        setState(() {
-                                          isChanging = false;
-                                        });
-                                      },
-                                      icon: const Icon(Icons.cancel_outlined),
-                                    )
-                                  : const SizedBox(),
+                              if (_textFieldValue != '')
+                                IconButton(
+                                  onPressed: () {
+                                    _locationController.clear();
+                                    setState(() {
+                                      _textFieldValue = '';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.cancel_outlined),
+                                )
+                              else
+                                const SizedBox(),
                               IconButton(
                                 onPressed: () async {
                                   await context
                                       .read<LocationCubit>()
                                       .requestLocationPermission();
-                                  if (city != null) {
-                                    locationController.text = city!;
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Could not fetch your current location. Please try again later'),
-                                      ),
-                                    );
-                                  }
                                 },
                                 icon: const Icon(Icons.my_location),
                                 tooltip: 'Weather at your current location',
@@ -188,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       context
                           .read<WeatherCubit>()
-                          .getWeatherData(locationController.text);
+                          .getWeatherData(_locationController.text);
                     },
                     child: const Icon(Icons.search),
                   ),
@@ -196,20 +189,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   BlocBuilder<WeatherCubit, WeatherState>(
                     builder: (context, state) {
-                      return state.status == WeatherStateStatus.initial
-                          ? const Text('Know the current Weather')
-                          : state.status == WeatherStateStatus.loading
-                              ? const CircularProgressIndicator()
-                              : state.status == WeatherStateStatus.loaded
-                                  ? Column(
-                                      children: [
-                                        Text('City : ${state.location}'),
-                                        const SizedBox(height: 10),
-                                        Text(
-                                            'weather : ${state.temp} degree celsius')
-                                      ],
-                                    )
-                                  : const Text('Please try again');
+                      if (state.status == WeatherStateStatus.initial) {
+                        return const Text('Know the current Weather');
+                      } else if (state.status == WeatherStateStatus.nullCity) {
+                        return const Text('');
+                      } else if (state.status == WeatherStateStatus.loading) {
+                        return const CircularProgressIndicator();
+                      } else if (state.status == WeatherStateStatus.loaded) {
+                        return Column(
+                          children: [
+                            Text('City  :  ${state.location}'),
+                            const SizedBox(height: 10),
+                            Text('weather  :  ${state.temp} \u2103')
+                          ],
+                        );
+                      } else {
+                        return const Text('Please try again');
+                      }
                     },
                   ),
                 ],

@@ -22,7 +22,6 @@ class ApiClient {
         model.current?.tempCelsius.toString()
       );
     } else {
-      print('else part : ${response.statusCode}');
       return (null, null);
     }
   }
